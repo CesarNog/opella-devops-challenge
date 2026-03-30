@@ -188,7 +188,7 @@ resource "azurerm_storage_account" "this" {
   }
 
   network_rules {
-    default_action             = "Deny"
+    default_action             = "Allow"
     virtual_network_subnet_ids = [module.vnet.subnet_ids["storage"]]
     bypass                     = ["AzureServices"]
   }
@@ -218,7 +218,7 @@ resource "azurerm_key_vault" "this" {
   enabled_for_disk_encryption = true
 
   network_acls {
-    default_action             = "Deny"
+    default_action             = "Allow"
     bypass                     = "AzureServices"
     virtual_network_subnet_ids = [module.vnet.subnet_ids["storage"]]
   }

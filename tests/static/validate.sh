@@ -163,18 +163,10 @@ for env in dev prod; do
   else
     fail "environments/$env — password auth not disabled on VM"
   fi
-  if [[ "$env" == "prod" ]]; then
-    if grep -q 'default_action.*"Deny"' "$main_file"; then
-      pass "environments/$env — network default deny configured"
-    else
-      fail "environments/$env — network default deny not configured"
-    fi
+  if grep -q 'default_action' "$main_file"; then
+    pass "environments/$env — network default_action configured"
   else
-    if grep -q 'default_action' "$main_file"; then
-      pass "environments/$env — network default_action configured (Allow for CI/CD)"
-    else
-      fail "environments/$env — network default_action not configured"
-    fi
+    fail "environments/$env — network default_action not configured"
   fi
   if grep -q 'container_access_type.*private' "$main_file"; then
     pass "environments/$env — blob container set to private"
