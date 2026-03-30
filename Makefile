@@ -42,8 +42,22 @@ apply-dev: ## Apply dev environment (requires plan)
 apply-prod: ## Apply prod environment (requires plan)
 	cd environments/prod && terraform apply prod.tfplan
 
-test: ## Run Terratest module tests
+test: test-static test-module ## Run all tests
+
+test-static: ## Run static validation tests (no cloud credentials needed)
+	bash tests/static/validate.sh
+
+test-module: ## Run Terratest module tests (requires Azure credentials)
 	cd modules/vnet/tests && go test -v -timeout 30m
+
+test-integration: ## Run plan-level integration tests (requires Azure credentials)
+	cd environments/dev && terraform plan -out=test.tfplan && terraform show -json test.tfplan > /tmp/dev-plan.json && rm test.tfplan
+	cd environments/prod && terraform plan -out=test.tfplan && terraform show -json test.tfplan > /tmp/prod-plan.json && rm test.tfplan
+	cd tests/integration && DEV_PLAN_JSON=/tmp/dev-plan.json PROD_PLAN_JSON=/tmp/prod-plan.json go test -v -timeout 10m
+
+test-policy: ## Run OPA policy tests (requires conftest + Azure credentials)
+	bash tests/policy/conftest.sh dev
+	bash tests/policy/conftest.sh prod
 
 clean: ## Remove Terraform cache and plan files
 	find . -type d -name ".terraform" -exec rm -rf {} + 2>/dev/null || true

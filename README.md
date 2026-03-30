@@ -96,6 +96,17 @@ Additional tags can be injected per environment via `extra_tags`. To enforce tag
 │       ├── outputs.tf
 │       ├── terraform.tfvars
 │       └── versions.tf
+├── tests/
+│   ├── static/
+│   │   └── validate.sh              # 39 offline validation checks
+│   ├── policy/
+│   │   ├── terraform.rego           # OPA security policies
+│   │   └── conftest.sh              # Policy test runner
+│   └── integration/
+│       ├── plan_test.go             # Plan-level Terratest tests
+│       └── go.mod
+├── docs/
+│   └── screenshots/                 # Azure Portal proof screenshots
 ├── .github/workflows/
 │   └── terraform.yml                # CI/CD pipeline
 ├── .pre-commit-config.yaml          # Pre-commit hooks config
@@ -271,6 +282,51 @@ The GitHub Actions workflow implements a promote-through-environments strategy:
 pip install pre-commit
 pre-commit install
 ```
+
+## Testing
+
+The project includes a comprehensive test suite at multiple levels:
+
+### Static Validation (no cloud credentials needed)
+
+```bash
+make test-static
+```
+
+Runs 39 checks including: formatting, module structure, variable/output documentation, secret detection, provider constraints, naming conventions, tag enforcement, and security configuration.
+
+### OPA Policy Tests
+
+```bash
+make test-policy
+```
+
+Validates Terraform plans against security policies written in Rego — checks for required tags, TLS 1.2, private blob access, password-disabled VMs, and RBAC-enabled Key Vaults.
+
+### Integration Tests (Terratest)
+
+```bash
+make test-integration   # Plan-level tests (no deploy)
+make test-module        # Full deploy/destroy tests
+```
+
+Plan-level tests validate resource counts, naming conventions, security settings, tag presence, and environment-specific rules (e.g., prod has no public IP, restricted SSH).
+
+## Azure Portal Screenshots
+
+Proof of successful deployment of the dev environment in Azure:
+
+### Resource Group Overview
+![Resource Group](docs/screenshots/01-resource-group-overview.png)
+
+### VNET with Subnets and NSGs
+![VNET Subnets](docs/screenshots/02-vnet-subnets.png)
+
+### Virtual Machine (Running)
+![VM Overview](docs/screenshots/03-vm-overview.png)
+
+### Tags (environment, project, region, managed_by)
+![Tags](docs/screenshots/04-tags.png)
 
 ## Terraform Plan Output
 
