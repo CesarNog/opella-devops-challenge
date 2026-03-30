@@ -358,14 +358,14 @@ az ad sp create-for-rbac --name "github-terraform" \
 #### Checkov Findings — Security Annotations
 ![Checkov Findings](docs/screenshots/07-github-actions-checkov-findings.png)
 
-*Checkov findings (soft-fail) appear as annotations on the workflow run. Examples: CKV_AZURE_32 (private endpoints), CKV_AZURE_33 (storage endpoints), CKV_AZURE_41 (secret expiration).*
+*Initial Checkov scan surfaced 23 findings. We addressed them all: secrets now have `content_type` and `expiration_date`, storage accounts have soft-delete + SAS policy + queue logging, and infrastructure-level checks (private endpoints, VM extensions, VNET NSGs) are suppressed with justifications in `.checkov.yml`.*
 
 #### Lint & Format Job — All Checks Passing
 ![Lint Job](docs/screenshots/08-github-actions-lint-job.png)
 
 *Lint job validates formatting with `terraform fmt`, runs TFLint on the VNET module and both environment configurations.*
 
-> **Note:** The Plan jobs fail because Azure Service Principal secrets (`ARM_CLIENT_ID`, etc.) are not configured in this public repository. With secrets configured, the full pipeline runs end-to-end.
+> **Note:** Apply-prod may fail when run from GitHub-hosted runners because prod uses `default_action = "Deny"` on storage/Key Vault firewalls. In production, you would use self-hosted runners within the VNET or Private Endpoints. Apply-dev passes end-to-end.
 
 ## Code Quality Tools & Processes
 
