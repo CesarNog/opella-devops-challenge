@@ -432,18 +432,34 @@ Proof of successful deployment of the dev environment in Azure:
 ### Tags (environment, project, region, managed_by)
 ![Tags](docs/screenshots/04-tags.png)
 
-## Terraform Plan Output
+## Test Results Summary
 
-Plan output for both environments is in the [`testing-results/`](testing-results/) folder:
+All test reports are stored in [`testing-results/`](testing-results/). Every test suite passes with zero failures.
 
-- [`terraform-plan-dev.txt`](testing-results/terraform-plan-dev.txt) — 17 resources (eastus2)
-- [`terraform-plan-prod.txt`](testing-results/terraform-plan-prod.txt) — 16 resources (westeurope)
+| Report | Test Type | Result |
+|---|---|---|
+| [`static-validation.txt`](testing-results/static-validation.txt) | 39 static checks (format, structure, docs, secrets, constraints, naming, tags, security) | **39/39 passed** |
+| [`terraform-fmt.txt`](testing-results/terraform-fmt.txt) | Terraform formatting | **All formatted** |
+| [`terraform-validate.txt`](testing-results/terraform-validate.txt) | Terraform validate (dev + prod) | **Both valid** |
+| [`tflint.txt`](testing-results/tflint.txt) | TFLint (module + dev + prod) | **0 warnings** |
+| [`checkov-dev.txt`](testing-results/checkov-dev.txt) | Checkov security scan (dev) | **24 passed, 0 failed** |
+| [`checkov-prod.txt`](testing-results/checkov-prod.txt) | Checkov security scan (prod) | **24 passed, 0 failed** |
+| [`checkov-module.txt`](testing-results/checkov-module.txt) | Checkov security scan (VNET module) | **6 passed, 0 failed** |
+| [`conftest-dev.txt`](testing-results/conftest-dev.txt) | OPA/Rego policy tests (dev) | **0 violations** |
+| [`conftest-prod.txt`](testing-results/conftest-prod.txt) | OPA/Rego policy tests (prod) | **0 violations** |
+| [`integration-tests.txt`](testing-results/integration-tests.txt) | Terratest plan-level (resource count, naming, security, tags, prod no public IP, restricted SSH) | **6/6 passed** |
+| [`terratest-vnet-module.txt`](testing-results/terratest-vnet-module.txt) | Terratest deploy/destroy (basic + NSG fixtures) | **2/2 passed** |
+| [`terraform-plan-dev.txt`](testing-results/terraform-plan-dev.txt) | Terraform plan — dev (eastus2) | **No changes (in sync)** |
+| [`terraform-plan-prod.txt`](testing-results/terraform-plan-prod.txt) | Terraform plan — prod (westeurope) | **3 to add** |
 
 To regenerate:
 
 ```bash
-make init-dev && make plan-dev
-make init-prod && make plan-prod
+make test-static                    # Static validation (39 checks)
+make test-integration               # Plan-level integration tests
+make test-module                    # Terratest deploy/destroy (VNET)
+make test-policy                    # OPA/Conftest policy tests
+checkov -d environments/dev --config-file .checkov.yml   # Checkov scan
 ```
 
 ## Future Improvements
