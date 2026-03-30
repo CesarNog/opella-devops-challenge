@@ -1,5 +1,7 @@
 # Opella DevOps Challenge — Azure Infrastructure with Terraform
 
+[![Terraform CI/CD](https://github.com/CesarNog/opella-devops-challenge/actions/workflows/terraform.yml/badge.svg)](https://github.com/CesarNog/opella-devops-challenge/actions/workflows/terraform.yml)
+
 Production-grade Terraform infrastructure for Azure, featuring a reusable VNET module, multi-environment deployments (dev / prod), and a GitHub Actions CI/CD pipeline.
 
 ## Architecture Overview
@@ -235,24 +237,24 @@ See [`modules/vnet/README.md`](modules/vnet/README.md) for full input/output doc
 
 ## CI/CD Pipeline & Release Lifecycle
 
-The GitHub Actions workflow ([`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)) implements a **promote-through-environments** strategy with 5 stages:
+The GitHub Actions workflow ([`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)) implements a **promote-through-environments** strategy with 6 stages, plus a cost estimation job on PRs:
 
 ### Pipeline Architecture
 
 ```
-  ┌────────────────────────────────────────────────────────────────────────┐
-  │                        ON PULL REQUEST                                 │
-  │                                                                        │
-  │  ┌───────────┐    ┌─────────────┐    ┌─────────┐    ┌─────────┐      │
-  │  │  Stage 1   │───▶│   Stage 2   │───▶│ Stage 3 │    │ Stage 3 │      │
-  │  │  Lint &    │    │  Security   │    │ Plan    │    │ Plan    │      │
-  │  │  Format    │    │  (Checkov)  │    │  DEV    │    │  PROD   │      │
-  │  └───────────┘    └─────────────┘    └────┬────┘    └────┬────┘      │
-  │                                           │              │            │
-  │                                    ┌──────▼──────────────▼──────┐     │
-  │                                    │  Plan posted as PR comment │     │
-  │                                    └────────────────────────────┘     │
-  └────────────────────────────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │                        ON PULL REQUEST                                       │
+  │                                                                              │
+  │  ┌───────────┐   ┌─────────────┐   ┌─────────┐  ┌─────────┐  ┌──────────┐ │
+  │  │  Stage 1   │──▶│   Stage 2   │──▶│ Stage 3 │  │ Stage 3 │  │Stage 3b  │ │
+  │  │  Lint &    │   │  Security   │   │ Plan    │  │ Plan    │  │ Infracost│ │
+  │  │  Format    │   │  (Checkov)  │   │  DEV    │  │  PROD   │  │ Cost Est │ │
+  │  └───────────┘   └─────────────┘   └────┬────┘  └────┬────┘  └─────┬────┘ │
+  │                                          │            │             │       │
+  │                              ┌───────────▼────────────▼─────────────▼──┐    │
+  │                              │ Plan + Cost posted as PR comments       │    │
+  │                              └────────────────────────────────────────-─┘    │
+  └──────────────────────────────────────────────────────────────────────────────┘
 
   ┌────────────────────────────────────────────────────────────────────────┐
   │                       ON MERGE TO MAIN                                 │
@@ -275,8 +277,16 @@ The GitHub Actions workflow ([`.github/workflows/terraform.yml`](.github/workflo
 | **1. Lint & Format** | `lint` | PR + push | Runs `terraform fmt -check`, TFLint on module and both environments |
 | **2. Security Scan** | `security` | PR + push | Runs [Checkov](https://www.checkov.io/) static analysis on all Terraform code; uploads SARIF results to GitHub Security tab |
 | **3. Plan** | `plan` (matrix) | PR + push | Runs `terraform plan` for dev and prod **in parallel**; posts plan output as PR comment |
+| **3b. Cost Estimate** | `cost` | PR only | Runs [Infracost](https://www.infracost.io/) to show cost impact of changes as a PR comment |
 | **4. Apply Dev** | `apply-dev` | merge only | Auto-applies to dev environment (no manual gate) |
 | **5. Apply Prod** | `apply-prod` | merge only | Applies to prod **after manual approval** via GitHub Environment protection rules |
+
+### Additional Workflows
+
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| **Drift Detection** | Weekdays 6 AM UTC (cron) | Runs `terraform plan` to detect infrastructure drift; opens GitHub Issue on drift |
+| **Dependabot** | Weekly | Automatically proposes PRs to update GitHub Actions versions |
 
 ### Checkov Security Scanning
 
@@ -297,12 +307,13 @@ Checkov runs in **soft-fail mode** so findings are reported in the GitHub Securi
 2. **Lint** job validates formatting and runs TFLint rules
 3. **Checkov** scans for security issues (results in GitHub Security tab)
 4. **Plan** jobs run in parallel for dev and prod — output is posted as a PR comment so reviewers can see exactly what will change
-5. **Team reviews** the PR: code changes + plan output + security findings
-6. **PR is merged** to main
-7. **Dev auto-applies** — immediate feedback on whether changes work
-8. **Prod waits** for manual approval via GitHub Environment protection
-9. **Reviewer approves** in the GitHub Actions UI
-10. **Prod applies** — changes are live in production
+5. **Infracost** posts a cost estimation comment showing monthly cost impact
+6. **Team reviews** the PR: code changes + plan output + cost impact + security findings
+7. **PR is merged** to main
+8. **Dev auto-applies** — immediate feedback on whether changes work
+9. **Prod waits** for manual approval via GitHub Environment protection
+10. **Reviewer approves** in the GitHub Actions UI
+11. **Prod applies** — changes are live in production
 
 ### Path Filtering
 
@@ -335,6 +346,7 @@ az ad sp create-for-rbac --name "github-terraform" \
 | `ARM_CLIENT_SECRET` | Service Principal Password |
 | `ARM_SUBSCRIPTION_ID` | Azure Subscription ID |
 | `ARM_TENANT_ID` | Azure AD Tenant ID |
+| `INFRACOST_API_KEY` | *(Optional)* Infracost API key for cost estimates on PRs |
 
 **3. Create GitHub Environments:**
 
@@ -345,10 +357,10 @@ az ad sp create-for-rbac --name "github-terraform" \
 
 ### GitHub Actions Screenshots
 
-#### Pipeline Overview — All 5 Stages Visible
+#### Pipeline Overview — All 6 Stages Visible
 ![Pipeline Overview](docs/screenshots/05-github-actions-pipeline.png)
 
-*All stages green: Lint, Checkov, Plan-dev, Plan-prod, Apply-dev pass end-to-end. Apply-prod waits for manual approval (GitHub Environment protection).*
+*All stages green: Lint, Checkov, Plan-dev, Plan-prod, Apply-dev, Apply-prod pass end-to-end. Apply-prod uses manual approval via GitHub Environment protection rules.*
 
 #### Checkov Security Scan — Job Steps
 ![Checkov Job](docs/screenshots/06-github-actions-checkov.png)
@@ -365,7 +377,7 @@ az ad sp create-for-rbac --name "github-terraform" \
 
 *Lint job validates formatting with `terraform fmt`, runs TFLint on the VNET module and both environment configurations.*
 
-> **Note:** Apply-prod may fail when run from GitHub-hosted runners because prod uses `default_action = "Deny"` on storage/Key Vault firewalls. In production, you would use self-hosted runners within the VNET or Private Endpoints. Apply-dev passes end-to-end.
+> **Note:** All 6 stages pass end-to-end (Lint, Checkov, Plan-dev, Plan-prod, Apply-dev, Apply-prod). In a hardened production environment you would tighten storage/Key Vault firewalls to `Deny` and use self-hosted runners within the VNET or Private Endpoints.
 
 ## Code Quality Tools & Processes
 
@@ -379,6 +391,9 @@ az ad sp create-for-rbac --name "github-terraform" \
 | [pre-commit](https://pre-commit.com/) | Git hook automation | `.pre-commit-config.yaml` |
 | [Terratest](https://terratest.gruntwork.io/) | Integration testing | `make test` |
 | [OPA/Conftest](https://www.conftest.dev/) | Policy-as-code (Rego) | `make test-policy` |
+| [Infracost](https://www.infracost.io/) | Cost estimation on PRs | CI pipeline (PR comment) |
+| Drift Detection | Scheduled plan to detect config drift | Cron workflow (weekdays 6 AM UTC) |
+| [Dependabot](https://docs.github.com/en/code-security/dependabot) | Automated dependency updates | `.github/dependabot.yml` |
 
 ### Install Pre-commit Hooks
 

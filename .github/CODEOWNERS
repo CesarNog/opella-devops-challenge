@@ -1,0 +1,10 @@
+# Infrastructure code requires platform team review
+/modules/                   @CesarNog
+/environments/              @CesarNog
+
+# CI/CD pipeline changes
+/.github/                   @CesarNog
+
+# Policy and security
+/policies/                  @CesarNog
+.checkov.yml                @CesarNog

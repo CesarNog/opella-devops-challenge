@@ -11,11 +11,21 @@ variable "vnet_name" {
 variable "resource_group_name" {
   description = "Name of the resource group where the VNET will be created."
   type        = string
+
+  validation {
+    condition     = length(var.resource_group_name) >= 1 && length(var.resource_group_name) <= 90
+    error_message = "Resource group name must be between 1 and 90 characters."
+  }
 }
 
 variable "location" {
   description = "Azure region for the VNET (e.g., eastus, westeurope)."
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-z]+[a-z0-9]*$", var.location))
+    error_message = "Location must be a valid Azure region identifier (lowercase, no spaces)."
+  }
 }
 
 variable "address_space" {
@@ -25,6 +35,11 @@ variable "address_space" {
   validation {
     condition     = length(var.address_space) > 0
     error_message = "At least one address space CIDR block is required."
+  }
+
+  validation {
+    condition     = alltrue([for cidr in var.address_space : can(cidrhost(cidr, 0))])
+    error_message = "Each address space entry must be a valid CIDR block."
   }
 }
 

@@ -4,11 +4,11 @@
 #
 # PIPELINE STAGES:
 #
-#   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-#   │  Lint &   │───▶│ Security │───▶│  Plan    │───▶│ Apply    │───▶│ Apply    │
-#   │  Format   │    │ (Checkov)│    │ (matrix) │    │  DEV     │    │  PROD    │
-#   └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
-#        PR              PR              PR           merge only    merge + gate
+#   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+#   │  Lint &   │───▶│ Security │───▶│  Plan    │──┬▶│ Apply    │───▶│ Apply    │    │ Infracost│
+#   │  Format   │    │ (Checkov)│    │ (matrix) │  │ │  DEV     │    │  PROD    │    │ Cost Est │
+#   └──────────┘    └──────────┘    └──────────┘  │ └──────────┘    └──────────┘    └──────────┘
+#        PR              PR              PR        │  merge only    merge + gate    └── PR only
 #
 # RELEASE LIFECYCLE:
 #   1. Developer pushes to feature branch and opens a PR
@@ -241,6 +241,69 @@ jobs:
       - name: Fail if plan failed
         if: steps.plan.outcome == 'failure'
         run: exit 1
+
+  # =========================================================================
+  # Stage 3b: Infracost Cost Estimation (PR only)
+  # =========================================================================
+  # Shows the cost impact of infrastructure changes as a PR comment.
+  # Compares the cost of the current branch against the base branch.
+  # Requires INFRACOST_API_KEY secret (free tier: https://infracost.io).
+  # =========================================================================
+  cost:
+    name: "Cost Estimate"
+    runs-on: ubuntu-latest
+    needs: plan
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Infracost breakdown (dev)
+        run: |
+          cd environments/dev
+          terraform init -backend=false
+          cd ../..
+          infracost breakdown \
+            --path environments/dev \
+            --format json \
+            --out-file /tmp/infracost-dev.json
+
+      - name: Infracost breakdown (prod)
+        run: |
+          cd environments/prod
+          terraform init -backend=false
+          cd ../..
+          infracost breakdown \
+            --path environments/prod \
+            --format json \
+            --out-file /tmp/infracost-prod.json
+
+      - name: Combine Infracost outputs
+        run: |
+          infracost output \
+            --path "/tmp/infracost-dev.json" \
+            --path "/tmp/infracost-prod.json" \
+            --format json \
+            --out-file /tmp/infracost-combined.json
+
+      - name: Post Infracost comment
+        run: |
+          infracost comment github \
+            --path /tmp/infracost-combined.json \
+            --repo ${{ github.repository }} \
+            --github-token ${{ secrets.GITHUB_TOKEN }} \
+            --pull-request ${{ github.event.pull_request.number }} \
+            --behavior update
 
   # =========================================================================
   # Stage 4: Apply Dev (automatic on merge)
