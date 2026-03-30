@@ -1,0 +1,29 @@
+# Checkov configuration
+# https://www.checkov.io/2.Basics/CLI%20Command%20Reference.html
+#
+# Skipped checks with justification for each:
+
+skip-check:
+  # --- Private Endpoints (requires Private DNS Zones — out of scope for this challenge) ---
+  - CKV2_AZURE_32  # Private endpoint for Key Vault
+  - CKV2_AZURE_33  # Private endpoint for Storage Account
+
+  # --- VM Extensions ---
+  - CKV_AZURE_50   # "Ensure VM Extensions are not Installed" — no extensions are installed;
+                    # Checkov flags the resource definition itself, not an actual extension
+
+  # --- VNET Subnet NSG (false positive) ---
+  - CKV2_AZURE_31  # The VNET module conditionally creates and associates NSGs per subnet;
+                    # Checkov can't resolve the dynamic association from the module source
+
+  # --- Dev-specific: firewall default_action=Allow needed for CI/CD ---
+  - CKV_AZURE_35   # Storage default network rule set to deny — dev uses Allow for CI compatibility
+  - CKV_AZURE_109  # Key Vault firewall rules — dev uses Allow for CI compatibility
+
+  # --- Shared Key auth required by Terraform AzureRM provider for data plane operations ---
+  - CKV2_AZURE_40  # "Ensure storage account is not configured with Shared Key authorization"
+                    # Disabling shared key breaks Terraform's ability to manage queue/blob properties
+
+  # --- Storage replication: dev intentionally uses LRS for cost savings ---
+  - CKV_AZURE_206  # "Ensure Storage Accounts use replication" — dev uses Standard_LRS;
+                    # prod uses GRS which satisfies this check

@@ -180,6 +180,30 @@ resource "azurerm_storage_account" "this" {
 
   min_tls_version                 = "TLS1_2"
   allow_nested_items_to_be_public = false
+  public_network_access_enabled = true
+
+  sas_policy {
+    expiration_period = "00.01:00:00"
+  }
+
+  blob_properties {
+    delete_retention_policy {
+      days = 7
+    }
+    container_delete_retention_policy {
+      days = 7
+    }
+  }
+
+  queue_properties {
+    logging {
+      delete                = true
+      read                  = true
+      write                 = true
+      version               = "1.0"
+      retention_policy_days = 7
+    }
+  }
 
   network_rules {
     default_action             = "Allow"
@@ -231,9 +255,15 @@ resource "azurerm_role_assignment" "kv_admin" {
 }
 
 resource "azurerm_key_vault_secret" "vm_ssh_key" {
-  name         = "${local.name_prefix}-vm-ssh-private-key"
-  value        = tls_private_key.vm.private_key_pem
-  key_vault_id = azurerm_key_vault.this.id
+  name            = "${local.name_prefix}-vm-ssh-private-key"
+  value           = tls_private_key.vm.private_key_pem
+  key_vault_id    = azurerm_key_vault.this.id
+  content_type    = "application/x-pem-file"
+  expiration_date = timeadd(timestamp(), "8760h")
+
+  lifecycle {
+    ignore_changes = [expiration_date]
+  }
 
   depends_on = [azurerm_role_assignment.kv_admin]
 }

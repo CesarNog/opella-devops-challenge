@@ -42,6 +42,7 @@ on:
       - "environments/**"
       - ".github/workflows/**"
       - ".tflint.hcl"
+      - ".checkov.yml"
   pull_request:
     branches: [main, master]
     paths:
@@ -49,6 +50,7 @@ on:
       - "environments/**"
       - ".github/workflows/**"
       - ".tflint.hcl"
+      - ".checkov.yml"
 
 permissions:
   contents: read
@@ -139,6 +141,7 @@ jobs:
         with:
           directory: modules/vnet
           framework: terraform
+          config_file: .checkov.yml
           output_format: cli,sarif
           output_file_path: console,checkov-module.sarif
           soft_fail: true
@@ -149,6 +152,7 @@ jobs:
         with:
           directory: environments/dev
           framework: terraform
+          config_file: .checkov.yml
           output_format: cli,sarif
           output_file_path: console,checkov-dev.sarif
           soft_fail: true
@@ -159,6 +163,7 @@ jobs:
         with:
           directory: environments/prod
           framework: terraform
+          config_file: .checkov.yml
           output_format: cli,sarif
           output_file_path: console,checkov-prod.sarif
           soft_fail: true
