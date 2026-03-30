@@ -180,7 +180,7 @@ resource "azurerm_storage_account" "this" {
 
   min_tls_version                 = "TLS1_2"
   allow_nested_items_to_be_public = false
-  public_network_access_enabled = true
+  public_network_access_enabled   = true
 
   sas_policy {
     expiration_period = "00.01:00:00"
