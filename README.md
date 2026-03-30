@@ -1,4 +1,4 @@
-# Opella DevOps Challenge — Azure Infrastructure with Terraform
+# Opella DevOps Challenge — Azure Infrastructure with Terraform - Candidate César Augusto Nogueira
 
 [![Terraform CI/CD](https://github.com/CesarNog/opella-devops-challenge/actions/workflows/terraform.yml/badge.svg)](https://github.com/CesarNog/opella-devops-challenge/actions/workflows/terraform.yml)
 
