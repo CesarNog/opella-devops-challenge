@@ -448,7 +448,7 @@ make init-prod && make plan-prod
 
 ## Future Improvements
 
-- **Remote state**: Uncomment backend configs and provision Azure Storage for state files
+- **Remote state**: Configured with Azure Storage backend (`opellatfstate0930`) for shared state across local and CI
 - **Azure Policy**: Enforce tagging and allowed resource types at the subscription level
 - **VNET Peering**: Add peering between dev and prod if cross-env communication is needed
 - **Bastion Host**: Replace public IPs with Azure Bastion for secure VM access

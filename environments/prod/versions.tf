@@ -16,13 +16,12 @@ terraform {
     }
   }
 
-  # Uncomment to use remote state in Azure Storage
-  # backend "azurerm" {
-  #   resource_group_name  = "opella-tfstate-rg"
-  #   storage_account_name = "opellatfstateprod"
-  #   container_name       = "tfstate"
-  #   key                  = "prod.terraform.tfstate"
-  # }
+  backend "azurerm" {
+    resource_group_name  = "opella-tfstate-rg"
+    storage_account_name = "opellatfstate0930"
+    container_name       = "tfstate"
+    key                  = "prod.terraform.tfstate"
+  }
 }
 
 provider "azurerm" {
