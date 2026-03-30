@@ -1,3 +1,5 @@
+data.http.deployer_ip: Reading...
+data.http.deployer_ip: Read complete after 0s [id=https://api.ipify.org?format=text]
 data.azurerm_client_config.current: Reading...
 data.azurerm_client_config.current: Read complete after 0s [id=Y2xpZW50Q29uZmlncy9jbGllbnRJZD0wNGIwNzc5NS04ZGRiLTQ2MWEtYmJlZS0wMmY5ZTFiZjdiNDY7b2JqZWN0SWQ9ODkxZmUxMmItYTJhMS00ODEyLWI5YTgtMTdmYjFlOTI5OTc4O3N1YnNjcmlwdGlvbklkPTQ1MzMwMDNkLTJkMGUtNDE1Yy05Y2NmLWNhYjc5ZDhkYWU4Yjt0ZW5hbnRJZD03NTA1MjRkMi04YTY2LTRhMDUtOGM2MC0yMjU4MmFiYmViOWY=]
 
@@ -13,11 +15,11 @@ Terraform will perform the following actions:
       + enable_rbac_authorization     = true
       + enabled_for_disk_encryption   = true
       + id                            = (known after apply)
-      + location                      = "eastus"
-      + name                          = "opella-kv-dev-eastus"
+      + location                      = "eastus2"
+      + name                          = "opella-kv-dev-eastus2"
       + public_network_access_enabled = true
       + purge_protection_enabled      = false
-      + resource_group_name           = "opella-dev-eastus-rg"
+      + resource_group_name           = "opella-dev-eastus2-rg"
       + sku_name                      = "standard"
       + soft_delete_retention_days    = 7
       + tags                          = {
@@ -25,7 +27,7 @@ Terraform will perform the following actions:
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
       + tenant_id                     = "750524d2-8a66-4a05-8c60-22582abbeb9f"
       + vault_uri                     = (known after apply)
@@ -33,6 +35,9 @@ Terraform will perform the following actions:
       + network_acls {
           + bypass                     = "AzureServices"
           + default_action             = "Deny"
+          + ip_rules                   = [
+              + "79.116.239.10",
+            ]
           + virtual_network_subnet_ids = (known after apply)
         }
     }
@@ -41,7 +46,7 @@ Terraform will perform the following actions:
   + resource "azurerm_key_vault_secret" "vm_ssh_key" {
       + id                      = (known after apply)
       + key_vault_id            = (known after apply)
-      + name                    = "opella-dev-eastus-vm-ssh-private-key"
+      + name                    = "opella-dev-eastus2-vm-ssh-private-key"
       + resource_id             = (known after apply)
       + resource_versionless_id = (known after apply)
       + value                   = (sensitive value)
@@ -59,9 +64,9 @@ Terraform will perform the following actions:
       + disk_controller_type                                   = (known after apply)
       + extensions_time_budget                                 = "PT1H30M"
       + id                                                     = (known after apply)
-      + location                                               = "eastus"
+      + location                                               = "eastus2"
       + max_bid_price                                          = -1
-      + name                                                   = "opella-dev-eastus-vm"
+      + name                                                   = "opella-dev-eastus2-vm"
       + network_interface_ids                                  = (known after apply)
       + patch_assessment_mode                                  = "ImageDefault"
       + patch_mode                                             = "ImageDefault"
@@ -72,14 +77,14 @@ Terraform will perform the following actions:
       + provision_vm_agent                                     = true
       + public_ip_address                                      = (known after apply)
       + public_ip_addresses                                    = (known after apply)
-      + resource_group_name                                    = "opella-dev-eastus-rg"
-      + size                                                   = "Standard_B1s"
+      + resource_group_name                                    = "opella-dev-eastus2-rg"
+      + size                                                   = "Standard_D2als_v7"
       + tags                                                   = {
           + "cost_center" = "engineering"
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
       + virtual_machine_id                                     = (known after apply)
       + vm_agent_platform_updates_enabled                      = false
@@ -92,7 +97,7 @@ Terraform will perform the following actions:
       + os_disk {
           + caching                   = "ReadWrite"
           + disk_size_gb              = (known after apply)
-          + name                      = "opella-dev-eastus-vm-osdisk"
+          + name                      = "opella-dev-eastus2-vm-osdisk"
           + storage_account_type      = "Standard_LRS"
           + write_accelerator_enabled = false
         }
@@ -115,18 +120,18 @@ Terraform will perform the following actions:
       + id                             = (known after apply)
       + internal_domain_name_suffix    = (known after apply)
       + ip_forwarding_enabled          = (known after apply)
-      + location                       = "eastus"
+      + location                       = "eastus2"
       + mac_address                    = (known after apply)
-      + name                           = "opella-dev-eastus-vm-nic"
+      + name                           = "opella-dev-eastus2-vm-nic"
       + private_ip_address             = (known after apply)
       + private_ip_addresses           = (known after apply)
-      + resource_group_name            = "opella-dev-eastus-rg"
+      + resource_group_name            = "opella-dev-eastus2-rg"
       + tags                           = {
           + "cost_center" = "engineering"
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
       + virtual_machine_id             = (known after apply)
 
@@ -151,9 +156,9 @@ Terraform will perform the following actions:
       + idle_timeout_in_minutes = 4
       + ip_address              = (known after apply)
       + ip_version              = "IPv4"
-      + location                = "eastus"
-      + name                    = "opella-dev-eastus-vm-pip"
-      + resource_group_name     = "opella-dev-eastus-rg"
+      + location                = "eastus2"
+      + name                    = "opella-dev-eastus2-vm-pip"
+      + resource_group_name     = "opella-dev-eastus2-rg"
       + sku                     = "Standard"
       + sku_tier                = "Regional"
       + tags                    = {
@@ -161,21 +166,21 @@ Terraform will perform the following actions:
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
     }
 
   # azurerm_resource_group.this will be created
   + resource "azurerm_resource_group" "this" {
       + id       = (known after apply)
-      + location = "eastus"
-      + name     = "opella-dev-eastus-rg"
+      + location = "eastus2"
+      + name     = "opella-dev-eastus2-rg"
       + tags     = {
           + "cost_center" = "engineering"
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
     }
 
@@ -208,9 +213,9 @@ Terraform will perform the following actions:
       + is_hns_enabled                     = false
       + large_file_share_enabled           = (known after apply)
       + local_user_enabled                 = true
-      + location                           = "eastus"
+      + location                           = "eastus2"
       + min_tls_version                    = "TLS1_2"
-      + name                               = "opellasadeveastus"
+      + name                               = "opellasadeveastus2"
       + nfsv3_enabled                      = false
       + primary_access_key                 = (sensitive value)
       + primary_blob_connection_string     = (sensitive value)
@@ -250,7 +255,7 @@ Terraform will perform the following actions:
       + primary_web_microsoft_host         = (known after apply)
       + public_network_access_enabled      = true
       + queue_encryption_key_type          = "Service"
-      + resource_group_name                = "opella-dev-eastus-rg"
+      + resource_group_name                = "opella-dev-eastus2-rg"
       + secondary_access_key               = (sensitive value)
       + secondary_blob_connection_string   = (sensitive value)
       + secondary_blob_endpoint            = (known after apply)
@@ -295,7 +300,7 @@ Terraform will perform the following actions:
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
 
       + network_rules {
@@ -303,7 +308,9 @@ Terraform will perform the following actions:
               + "AzureServices",
             ]
           + default_action             = "Deny"
-          + ip_rules                   = (known after apply)
+          + ip_rules                   = [
+              + "79.116.239.10",
+            ]
           + virtual_network_subnet_ids = (known after apply)
         }
     }
@@ -319,7 +326,7 @@ Terraform will perform the following actions:
       + metadata                          = (known after apply)
       + name                              = "data"
       + resource_manager_id               = (known after apply)
-      + storage_account_name              = "opellasadeveastus"
+      + storage_account_name              = "opellasadeveastus2"
     }
 
   # tls_private_key.vm will be created
@@ -340,9 +347,9 @@ Terraform will perform the following actions:
   # module.vnet.azurerm_network_security_group.this["compute"] will be created
   + resource "azurerm_network_security_group" "this" {
       + id                  = (known after apply)
-      + location            = "eastus"
-      + name                = "opella-dev-eastus-vnet-compute-nsg"
-      + resource_group_name = "opella-dev-eastus-rg"
+      + location            = "eastus2"
+      + name                = "opella-dev-eastus2-vnet-compute-nsg"
+      + resource_group_name = "opella-dev-eastus2-rg"
       + security_rule       = [
           + {
               + access                                     = "Allow"
@@ -386,16 +393,16 @@ Terraform will perform the following actions:
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
     }
 
   # module.vnet.azurerm_network_security_group.this["storage"] will be created
   + resource "azurerm_network_security_group" "this" {
       + id                  = (known after apply)
-      + location            = "eastus"
-      + name                = "opella-dev-eastus-vnet-storage-nsg"
-      + resource_group_name = "opella-dev-eastus-rg"
+      + location            = "eastus2"
+      + name                = "opella-dev-eastus2-vnet-storage-nsg"
+      + resource_group_name = "opella-dev-eastus2-rg"
       + security_rule       = [
           + {
               + access                                     = "Deny"
@@ -421,7 +428,7 @@ Terraform will perform the following actions:
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
     }
 
@@ -438,8 +445,8 @@ Terraform will perform the following actions:
       + private_endpoint_network_policies              = (known after apply)
       + private_endpoint_network_policies_enabled      = (known after apply)
       + private_link_service_network_policies_enabled  = (known after apply)
-      + resource_group_name                            = "opella-dev-eastus-rg"
-      + virtual_network_name                           = "opella-dev-eastus-vnet"
+      + resource_group_name                            = "opella-dev-eastus2-rg"
+      + virtual_network_name                           = "opella-dev-eastus2-vnet"
     }
 
   # module.vnet.azurerm_subnet.this["storage"] will be created
@@ -455,12 +462,12 @@ Terraform will perform the following actions:
       + private_endpoint_network_policies              = (known after apply)
       + private_endpoint_network_policies_enabled      = (known after apply)
       + private_link_service_network_policies_enabled  = (known after apply)
-      + resource_group_name                            = "opella-dev-eastus-rg"
+      + resource_group_name                            = "opella-dev-eastus2-rg"
       + service_endpoints                              = [
           + "Microsoft.KeyVault",
           + "Microsoft.Storage",
         ]
-      + virtual_network_name                           = "opella-dev-eastus-vnet"
+      + virtual_network_name                           = "opella-dev-eastus2-vnet"
     }
 
   # module.vnet.azurerm_subnet_network_security_group_association.this["compute"] will be created
@@ -485,16 +492,16 @@ Terraform will perform the following actions:
       + dns_servers         = []
       + guid                = (known after apply)
       + id                  = (known after apply)
-      + location            = "eastus"
-      + name                = "opella-dev-eastus-vnet"
-      + resource_group_name = "opella-dev-eastus-rg"
+      + location            = "eastus2"
+      + name                = "opella-dev-eastus2-vnet"
+      + resource_group_name = "opella-dev-eastus2-rg"
       + subnet              = (known after apply)
       + tags                = {
           + "cost_center" = "engineering"
           + "environment" = "dev"
           + "managed_by"  = "terraform"
           + "project"     = "opella"
-          + "region"      = "eastus"
+          + "region"      = "eastus2"
         }
     }
 
@@ -503,8 +510,8 @@ Plan: 17 to add, 0 to change, 0 to destroy.
 Changes to Outputs:
   + key_vault_id                          = (known after apply)
   + key_vault_uri                         = (known after apply)
-  + resource_group_name                   = "opella-dev-eastus-rg"
-  + storage_account_name                  = "opellasadeveastus"
+  + resource_group_name                   = "opella-dev-eastus2-rg"
+  + storage_account_name                  = "opellasadeveastus2"
   + storage_account_primary_blob_endpoint = (known after apply)
   + subnet_ids                            = {
       + compute = (known after apply)
@@ -513,7 +520,7 @@ Changes to Outputs:
   + vm_private_ip                         = (known after apply)
   + vm_public_ip                          = (known after apply)
   + vnet_id                               = (known after apply)
-  + vnet_name                             = "opella-dev-eastus-vnet"
+  + vnet_name                             = "opella-dev-eastus2-vnet"
 
 ─────────────────────────────────────────────────────────────────────────────
 

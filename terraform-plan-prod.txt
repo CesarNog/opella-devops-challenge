@@ -1,3 +1,5 @@
+data.http.deployer_ip: Reading...
+data.http.deployer_ip: Read complete after 0s [id=https://api.ipify.org?format=text]
 data.azurerm_client_config.current: Reading...
 data.azurerm_client_config.current: Read complete after 0s [id=Y2xpZW50Q29uZmlncy9jbGllbnRJZD0wNGIwNzc5NS04ZGRiLTQ2MWEtYmJlZS0wMmY5ZTFiZjdiNDY7b2JqZWN0SWQ9ODkxZmUxMmItYTJhMS00ODEyLWI5YTgtMTdmYjFlOTI5OTc4O3N1YnNjcmlwdGlvbklkPTQ1MzMwMDNkLTJkMGUtNDE1Yy05Y2NmLWNhYjc5ZDhkYWU4Yjt0ZW5hbnRJZD03NTA1MjRkMi04YTY2LTRhMDUtOGM2MC0yMjU4MmFiYmViOWY=]
 
@@ -34,6 +36,9 @@ Terraform will perform the following actions:
       + network_acls {
           + bypass                     = "AzureServices"
           + default_action             = "Deny"
+          + ip_rules                   = [
+              + "79.116.239.10",
+            ]
           + virtual_network_subnet_ids = (known after apply)
         }
     }
@@ -284,7 +289,9 @@ Terraform will perform the following actions:
               + "AzureServices",
             ]
           + default_action             = "Deny"
-          + ip_rules                   = (known after apply)
+          + ip_rules                   = [
+              + "79.116.239.10",
+            ]
           + virtual_network_subnet_ids = (known after apply)
         }
     }

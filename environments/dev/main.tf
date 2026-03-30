@@ -23,6 +23,12 @@ locals {
 
 data "azurerm_client_config" "current" {}
 
+# Resolve the public IP of the machine running Terraform so we can whitelist
+# it in storage account and Key Vault firewalls during provisioning.
+data "http" "deployer_ip" {
+  url = "https://api.ipify.org?format=text"
+}
+
 # ---------------------------------------------------------------------------
 # Resource Group
 # ---------------------------------------------------------------------------
@@ -180,6 +186,7 @@ resource "azurerm_storage_account" "this" {
 
   network_rules {
     default_action             = "Deny"
+    ip_rules                   = [chomp(data.http.deployer_ip.response_body)]
     virtual_network_subnet_ids = [module.vnet.subnet_ids["storage"]]
     bypass                     = ["AzureServices"]
   }
@@ -211,6 +218,7 @@ resource "azurerm_key_vault" "this" {
   network_acls {
     default_action             = "Deny"
     bypass                     = "AzureServices"
+    ip_rules                   = [chomp(data.http.deployer_ip.response_body)]
     virtual_network_subnet_ids = [module.vnet.subnet_ids["storage"]]
   }
 
