@@ -105,6 +105,9 @@ Additional tags can be injected per environment via `extra_tags`. To enforce tag
 │   └── integration/
 │       ├── plan_test.go             # Plan-level Terratest tests
 │       └── go.mod
+├── testing-results/
+│   ├── terraform-plan-dev.txt       # Dev plan output (17 resources)
+│   └── terraform-plan-prod.txt      # Prod plan output (16 resources)
 ├── docs/
 │   └── screenshots/                 # Azure Portal proof screenshots
 ├── .github/workflows/
@@ -330,26 +333,17 @@ Proof of successful deployment of the dev environment in Azure:
 
 ## Terraform Plan Output
 
-The plan output for each environment is included below. To generate fresh output:
+Plan output for both environments is in the [`testing-results/`](testing-results/) folder:
+
+- [`terraform-plan-dev.txt`](testing-results/terraform-plan-dev.txt) — 17 resources (eastus2)
+- [`terraform-plan-prod.txt`](testing-results/terraform-plan-prod.txt) — 16 resources (westeurope)
+
+To regenerate:
 
 ```bash
 make init-dev && make plan-dev
 make init-prod && make plan-prod
 ```
-
-<details>
-<summary>Dev Environment Plan</summary>
-
-See `terraform-plan-dev.txt` in the repository root (generated via `terraform plan`).
-
-</details>
-
-<details>
-<summary>Prod Environment Plan</summary>
-
-See `terraform-plan-prod.txt` in the repository root (generated via `terraform plan`).
-
-</details>
 
 ## Future Improvements
 
