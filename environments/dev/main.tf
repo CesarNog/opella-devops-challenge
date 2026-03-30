@@ -220,11 +220,14 @@ resource "azurerm_key_vault" "this" {
   tags = local.common_tags
 }
 
-# Store the VM SSH private key in Key Vault
 resource "azurerm_role_assignment" "kv_admin" {
   scope                = azurerm_key_vault.this.id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = data.azurerm_client_config.current.object_id
+
+  lifecycle {
+    ignore_changes = [principal_id]
+  }
 }
 
 resource "azurerm_key_vault_secret" "vm_ssh_key" {
