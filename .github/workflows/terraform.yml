@@ -1,12 +1,35 @@
 # =============================================================================
 # Terraform CI/CD Pipeline
 # =============================================================================
-# Release lifecycle:
-#   1. PR opened   -> lint + validate + plan (for each environment)
-#   2. PR approved  -> plan output posted as PR comment for review
-#   3. Merge to main -> auto-apply dev, then manual approval gate for prod
 #
-# This gives fast feedback on PRs while protecting prod with a manual gate.
+# PIPELINE STAGES:
+#
+#   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+#   │  Lint &   │───▶│ Security │───▶│  Plan    │───▶│ Apply    │───▶│ Apply    │
+#   │  Format   │    │ (Checkov)│    │ (matrix) │    │  DEV     │    │  PROD    │
+#   └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+#        PR              PR              PR           merge only    merge + gate
+#
+# RELEASE LIFECYCLE:
+#   1. Developer pushes to feature branch and opens a PR
+#   2. Lint job checks formatting (terraform fmt) and runs TFLint
+#   3. Security job runs Checkov static analysis on all Terraform files
+#   4. Plan jobs run in parallel for dev and prod (matrix strategy)
+#   5. Plan output is posted as a PR comment for team review
+#   6. On merge to main:
+#      a. Dev environment auto-applies (fast feedback)
+#      b. Prod requires manual approval via GitHub Environment protection
+#
+# REQUIRED SECRETS:
+#   ARM_CLIENT_ID       - Azure Service Principal App ID
+#   ARM_CLIENT_SECRET   - Azure Service Principal Password
+#   ARM_SUBSCRIPTION_ID - Azure Subscription ID
+#   ARM_TENANT_ID       - Azure AD Tenant ID
+#
+# REQUIRED GITHUB ENVIRONMENTS:
+#   dev        - No protection rules (auto-deploy)
+#   production - Required reviewers + wait timer (manual approval)
+#
 # =============================================================================
 
 name: "Terraform CI/CD"
@@ -14,13 +37,22 @@ name: "Terraform CI/CD"
 on:
   push:
     branches: [main]
+    paths:
+      - "modules/**"
+      - "environments/**"
+      - ".github/workflows/terraform.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "modules/**"
+      - "environments/**"
+      - ".github/workflows/terraform.yml"
 
 permissions:
   contents: read
   pull-requests: write
   id-token: write
+  security-events: write
 
 env:
   TF_VERSION: "1.7.0"
@@ -30,15 +62,23 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
+# ---------------------------------------------------------------------------
+# JOBS
+# ---------------------------------------------------------------------------
 jobs:
-  # ---------------------------------------------------------------------------
-  # Lint & Validate
-  # ---------------------------------------------------------------------------
+
+  # =========================================================================
+  # Stage 1: Lint & Format Check
+  # =========================================================================
+  # Runs on every PR and push to main.
+  # Ensures all .tf files are properly formatted and pass TFLint rules.
+  # This is the first gate — fails fast before heavier jobs run.
+  # =========================================================================
   lint:
-    name: "Lint & Format Check"
+    name: "Lint & Format"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
@@ -46,7 +86,7 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Format Check
+      - name: Check formatting
         run: terraform fmt -check -recursive -diff
 
       - name: Setup TFLint
@@ -54,19 +94,91 @@ jobs:
         with:
           tflint_version: latest
 
-      - name: Run TFLint (modules)
-        run: |
-          cd modules/vnet
-          tflint --init --config=../../.tflint.hcl
-          tflint --config=../../.tflint.hcl
+      - name: Init TFLint plugins
+        run: tflint --init --config=.tflint.hcl
 
-  # ---------------------------------------------------------------------------
-  # Plan per environment (matrix strategy)
-  # ---------------------------------------------------------------------------
+      - name: Lint VNET module
+        run: tflint --config=../../.tflint.hcl
+        working-directory: modules/vnet
+
+      - name: Lint dev environment
+        run: tflint --config=../../.tflint.hcl
+        working-directory: environments/dev
+
+      - name: Lint prod environment
+        run: tflint --config=../../.tflint.hcl
+        working-directory: environments/prod
+
+  # =========================================================================
+  # Stage 2: Security Scan (Checkov)
+  # =========================================================================
+  # Runs Checkov static analysis against all Terraform configurations.
+  # Checks for security misconfigurations such as:
+  #   - Storage accounts without encryption
+  #   - VMs with password authentication
+  #   - Key Vaults without purge protection
+  #   - Missing network restrictions
+  #   - Overly permissive NSG rules
+  #
+  # Results are uploaded as SARIF to GitHub Security tab.
+  # Soft-fail is enabled so findings are reported but don't block the pipeline.
+  # =========================================================================
+  security:
+    name: "Security Scan (Checkov)"
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov on VNET module
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: modules/vnet
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,checkov-module.sarif
+          soft_fail: true
+          quiet: true
+
+      - name: Run Checkov on dev environment
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: environments/dev
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,checkov-dev.sarif
+          soft_fail: true
+          quiet: true
+
+      - name: Run Checkov on prod environment
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: environments/prod
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,checkov-prod.sarif
+          soft_fail: true
+          quiet: true
+
+      - name: Upload Checkov SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-module.sarif
+          category: checkov-module
+
+  # =========================================================================
+  # Stage 3: Terraform Plan (per environment)
+  # =========================================================================
+  # Uses a matrix strategy to plan dev and prod in parallel.
+  # On PRs, the plan output is posted as a comment for reviewers.
+  # This lets the team see exactly what will change before approving.
+  # =========================================================================
   plan:
     name: "Plan - ${{ matrix.environment }}"
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [lint, security]
     strategy:
       fail-fast: false
       matrix:
@@ -75,7 +187,7 @@ jobs:
       run:
         working-directory: environments/${{ matrix.environment }}
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
@@ -94,12 +206,12 @@ jobs:
         run: terraform plan -no-color -out=${{ matrix.environment }}.tfplan
         continue-on-error: true
 
-      - name: Post Plan to PR
+      - name: Post plan output to PR comment
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            const output = `### Terraform Plan - \`${{ matrix.environment }}\` ${{ steps.plan.outcome == 'success' && '✅' || '❌' }}
+            const output = `### Terraform Plan — \`${{ matrix.environment }}\` ${{ steps.plan.outcome == 'success' && '✅' || '❌' }}
 
             <details><summary>Show Plan</summary>
 
@@ -118,13 +230,17 @@ jobs:
               body: output
             });
 
-      - name: Plan Status
+      - name: Fail if plan failed
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-  # ---------------------------------------------------------------------------
-  # Apply Dev (auto on merge to main)
-  # ---------------------------------------------------------------------------
+  # =========================================================================
+  # Stage 4: Apply Dev (automatic on merge)
+  # =========================================================================
+  # Triggered only on push to main (i.e., after PR merge).
+  # Uses the "dev" GitHub Environment (no protection rules).
+  # This gives immediate feedback on whether changes work in a real env.
+  # =========================================================================
   apply-dev:
     name: "Apply - dev"
     runs-on: ubuntu-latest
@@ -135,7 +251,7 @@ jobs:
       run:
         working-directory: environments/dev
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
@@ -149,9 +265,13 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
-  # ---------------------------------------------------------------------------
-  # Apply Prod (manual approval required)
-  # ---------------------------------------------------------------------------
+  # =========================================================================
+  # Stage 5: Apply Prod (manual approval gate)
+  # =========================================================================
+  # Runs after dev succeeds. Requires manual approval through the
+  # "production" GitHub Environment (configured with required reviewers).
+  # This is the final safety gate before changes reach production.
+  # =========================================================================
   apply-prod:
     name: "Apply - prod"
     runs-on: ubuntu-latest
@@ -162,7 +282,7 @@ jobs:
       run:
         working-directory: environments/prod
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Terraform

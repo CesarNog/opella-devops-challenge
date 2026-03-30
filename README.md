@@ -235,51 +235,121 @@ See [`modules/vnet/README.md`](modules/vnet/README.md) for full input/output doc
 
 ## CI/CD Pipeline & Release Lifecycle
 
-The GitHub Actions workflow implements a promote-through-environments strategy:
+The GitHub Actions workflow ([`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)) implements a **promote-through-environments** strategy with 5 stages:
+
+### Pipeline Architecture
 
 ```
-  PR Branch                        main Branch
-  ─────────                        ───────────
-  ┌─────────┐                     ┌──────────────┐
-  │  Push    │──── PR opened ────▶│  Lint + Plan  │
-  │  commit  │                    │  (all envs)   │
-  └─────────┘                     └──────┬───────┘
-                                         │ Plan posted as PR comment
-                                         ▼
-                                  ┌──────────────┐
-                                  │  PR Review    │
-                                  │  + Approve    │
-                                  └──────┬───────┘
-                                         │ Merge
-                                         ▼
-                                  ┌──────────────┐
-                                  │  Apply DEV    │◄── automatic
-                                  └──────┬───────┘
-                                         │
-                                         ▼
-                                  ┌──────────────┐
-                                  │  Manual Gate  │◄── requires approval
-                                  └──────┬───────┘
-                                         │
-                                         ▼
-                                  ┌──────────────┐
-                                  │  Apply PROD   │
-                                  └──────────────┘
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │                        ON PULL REQUEST                                 │
+  │                                                                        │
+  │  ┌───────────┐    ┌─────────────┐    ┌─────────┐    ┌─────────┐      │
+  │  │  Stage 1   │───▶│   Stage 2   │───▶│ Stage 3 │    │ Stage 3 │      │
+  │  │  Lint &    │    │  Security   │    │ Plan    │    │ Plan    │      │
+  │  │  Format    │    │  (Checkov)  │    │  DEV    │    │  PROD   │      │
+  │  └───────────┘    └─────────────┘    └────┬────┘    └────┬────┘      │
+  │                                           │              │            │
+  │                                    ┌──────▼──────────────▼──────┐     │
+  │                                    │  Plan posted as PR comment │     │
+  │                                    └────────────────────────────┘     │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │                       ON MERGE TO MAIN                                 │
+  │                                                                        │
+  │  Stages 1-3 run as above, then:                                        │
+  │                                                                        │
+  │  ┌───────────┐         ┌────────────────┐         ┌───────────┐       │
+  │  │  Stage 4   │────────▶│  Manual Gate   │────────▶│  Stage 5   │      │
+  │  │  Apply     │         │  (GitHub Env   │         │  Apply     │      │
+  │  │  DEV       │         │  "production") │         │  PROD      │      │
+  │  │ (automatic)│         └────────────────┘         │ (approved) │      │
+  │  └───────────┘                                     └───────────┘       │
+  └────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Key features:**
-- **PR feedback**: Plan output is posted as a PR comment for review
-- **Progressive deployment**: Dev auto-deploys, prod requires manual approval via GitHub Environments
-- **Matrix strategy**: All environments are planned in parallel
+### Stage Details
+
+| Stage | Job Name | Trigger | What It Does |
+|---|---|---|---|
+| **1. Lint & Format** | `lint` | PR + push | Runs `terraform fmt -check`, TFLint on module and both environments |
+| **2. Security Scan** | `security` | PR + push | Runs [Checkov](https://www.checkov.io/) static analysis on all Terraform code; uploads SARIF results to GitHub Security tab |
+| **3. Plan** | `plan` (matrix) | PR + push | Runs `terraform plan` for dev and prod **in parallel**; posts plan output as PR comment |
+| **4. Apply Dev** | `apply-dev` | merge only | Auto-applies to dev environment (no manual gate) |
+| **5. Apply Prod** | `apply-prod` | merge only | Applies to prod **after manual approval** via GitHub Environment protection rules |
+
+### Checkov Security Scanning
+
+[Checkov](https://www.checkov.io/) is an open-source static analysis tool that scans Terraform files for security misconfigurations. Our pipeline checks for:
+
+- Storage accounts without encryption or network restrictions
+- VMs with password authentication enabled
+- Key Vaults without purge protection or RBAC
+- Missing TLS version enforcement
+- Overly permissive NSG rules
+- Missing tags on resources
+
+Checkov runs in **soft-fail mode** so findings are reported in the GitHub Security tab but don't block deployment. This allows teams to review and remediate findings progressively.
+
+### Release Lifecycle (Step by Step)
+
+1. **Developer** creates a feature branch and opens a PR
+2. **Lint** job validates formatting and runs TFLint rules
+3. **Checkov** scans for security issues (results in GitHub Security tab)
+4. **Plan** jobs run in parallel for dev and prod — output is posted as a PR comment so reviewers can see exactly what will change
+5. **Team reviews** the PR: code changes + plan output + security findings
+6. **PR is merged** to main
+7. **Dev auto-applies** — immediate feedback on whether changes work
+8. **Prod waits** for manual approval via GitHub Environment protection
+9. **Reviewer approves** in the GitHub Actions UI
+10. **Prod applies** — changes are live in production
+
+### Path Filtering
+
+The workflow only triggers when relevant files change:
+
+```yaml
+paths:
+  - "modules/**"
+  - "environments/**"
+  - ".github/workflows/terraform.yml"
+```
+
+Changes to README, docs, or scripts won't trigger unnecessary pipeline runs.
 
 ### Setting Up the Pipeline
 
-1. Create GitHub Environments (`dev` and `production`) with appropriate protection rules
-2. Add these repository secrets:
-   - `ARM_CLIENT_ID` — Azure Service Principal App ID
-   - `ARM_CLIENT_SECRET` — Azure Service Principal Password
-   - `ARM_SUBSCRIPTION_ID` — Azure Subscription ID
-   - `ARM_TENANT_ID` — Azure AD Tenant ID
+**1. Create an Azure Service Principal:**
+
+```bash
+az ad sp create-for-rbac --name "github-terraform" \
+  --role Contributor \
+  --scopes /subscriptions/<SUBSCRIPTION_ID>
+```
+
+**2. Add GitHub repository secrets:**
+
+| Secret | Value |
+|---|---|
+| `ARM_CLIENT_ID` | Service Principal App ID |
+| `ARM_CLIENT_SECRET` | Service Principal Password |
+| `ARM_SUBSCRIPTION_ID` | Azure Subscription ID |
+| `ARM_TENANT_ID` | Azure AD Tenant ID |
+
+**3. Create GitHub Environments:**
+
+| Environment | Protection Rules |
+|---|---|
+| `dev` | None (auto-deploy) |
+| `production` | Required reviewers + optional wait timer |
+
+### GitHub Actions Screenshots
+
+#### Pipeline Overview (all stages)
+![Pipeline Overview](docs/screenshots/05-github-actions-pipeline.png)
+
+#### Plan Output Posted as PR Comment
+![PR Plan Comment](docs/screenshots/06-github-actions-pr-plan.png)
 
 ## Code Quality Tools & Processes
 
