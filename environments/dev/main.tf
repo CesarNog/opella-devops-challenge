@@ -9,6 +9,7 @@ locals {
       project     = var.project
       region      = var.location
       managed_by  = "terraform"
+      cost_center = "platform-engineering"
     },
     var.extra_tags,
   )
