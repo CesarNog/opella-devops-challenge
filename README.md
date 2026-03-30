@@ -105,6 +105,10 @@ Additional tags can be injected per environment via `extra_tags`. To enforce tag
 │   └── integration/
 │       ├── plan_test.go             # Plan-level Terratest tests
 │       └── go.mod
+├── scripts/
+│   ├── infra-up.sh                  # Deploy or resume environments
+│   ├── infra-down.sh                # Deallocate VMs (save costs)
+│   └── infra-status.sh              # Show environment status
 ├── testing-results/
 │   ├── terraform-plan-dev.txt       # Dev plan output (17 resources)
 │   └── terraform-plan-prod.txt      # Prod plan output (16 resources)
@@ -150,6 +154,16 @@ cd environments/prod
 terraform init
 terraform plan -out=prod.tfplan
 terraform apply prod.tfplan
+```
+
+### Quick Scripts
+
+```bash
+./scripts/infra-up.sh dev       # Deploy or resume dev (starts deallocated VMs)
+./scripts/infra-up.sh prod      # Deploy or resume prod
+./scripts/infra-down.sh dev     # Deallocate VMs to save costs (no destroy)
+./scripts/infra-down.sh all     # Stop both environments
+./scripts/infra-status.sh       # Show status of all environments
 ```
 
 ### Using the Makefile
