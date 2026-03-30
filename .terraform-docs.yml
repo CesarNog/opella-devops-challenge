@@ -1,0 +1,59 @@
+formatter: markdown table
+
+sections:
+  show:
+    - header
+    - requirements
+    - providers
+    - inputs
+    - outputs
+    - resources
+
+content: |-
+  {{ .Header }}
+
+  ## Usage
+
+  ```hcl
+  module "vnet" {
+    source = "../../modules/vnet"
+
+    vnet_name           = "my-vnet"
+    resource_group_name = "my-rg"
+    location            = "eastus"
+    address_space       = ["10.0.0.0/16"]
+
+    subnets = {
+      web = {
+        address_prefixes = ["10.0.1.0/24"]
+        nsg_rules        = []
+      }
+    }
+
+    tags = {
+      environment = "dev"
+    }
+  }
+  ```
+
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+output:
+  file: README.md
+  mode: inject
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ .Content }}
+    <!-- END_TF_DOCS -->
+
+sort:
+  enabled: true
+  by: required
