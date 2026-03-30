@@ -372,6 +372,11 @@ az ad sp create-for-rbac --name "github-terraform" \
 
 *Initial Checkov scan surfaced 23 findings. We addressed them all: secrets now have `content_type` and `expiration_date`, storage accounts have soft-delete + SAS policy + queue logging, and infrastructure-level checks (private endpoints, VM extensions, VNET NSGs) are suppressed with justifications in `.checkov.yml`.*
 
+#### PR Plan Comments — Dev & Prod Plans
+![PR Plan Comments](docs/screenshots/09-pr-plan-comments.png)
+
+*On every PR, the pipeline automatically posts Terraform plan output as comments for both dev and prod environments. Reviewers see exactly what will change before approving.*
+
 #### Lint & Format Job — All Checks Passing
 ![Lint Job](docs/screenshots/08-github-actions-lint-job.png)
 
