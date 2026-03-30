@@ -73,24 +73,6 @@ variable "enable_ddos_protection" {
   default     = false
 }
 
-variable "enable_flow_logs" {
-  description = "Enable NSG flow logs for network traffic analysis. Requires a storage account ID."
-  type        = bool
-  default     = false
-}
-
-variable "flow_log_storage_account_id" {
-  description = "Storage account ID for NSG flow logs. Required when enable_flow_logs is true."
-  type        = string
-  default     = ""
-}
-
-variable "flow_log_retention_days" {
-  description = "Number of days to retain NSG flow logs."
-  type        = number
-  default     = 7
-}
-
 variable "tags" {
   description = "Map of tags to apply to all resources created by this module."
   type        = map(string)
