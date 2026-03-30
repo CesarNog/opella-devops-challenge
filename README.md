@@ -348,7 +348,7 @@ az ad sp create-for-rbac --name "github-terraform" \
 #### Pipeline Overview — All 5 Stages Visible
 ![Pipeline Overview](docs/screenshots/05-github-actions-pipeline.png)
 
-*Shows the full pipeline: Lint & Format (green), Security Scan/Checkov (green), Plan dev/prod (red due to missing Azure secrets — expected in public repo), and the Apply stages (skipped).*
+*Shows the full pipeline: Lint & Format (green), Security Scan/Checkov (green), Plan dev/prod (green). Apply-dev fails because CI uses a fresh state while resources already exist from local deploy (no remote backend configured).*
 
 #### Checkov Security Scan — Job Steps
 ![Checkov Job](docs/screenshots/06-github-actions-checkov.png)
