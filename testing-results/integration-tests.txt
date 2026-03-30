@@ -1,0 +1,14 @@
+=== RUN   TestDevPlanResourceCount
+--- PASS: TestDevPlanResourceCount (0.00s)
+=== RUN   TestDevPlanNamingConvention
+--- PASS: TestDevPlanNamingConvention (0.00s)
+=== RUN   TestDevPlanSecuritySettings
+--- PASS: TestDevPlanSecuritySettings (0.00s)
+=== RUN   TestDevPlanTagsPresent
+--- PASS: TestDevPlanTagsPresent (0.00s)
+=== RUN   TestProdPlanNoPublicIP
+--- PASS: TestProdPlanNoPublicIP (0.00s)
+=== RUN   TestProdPlanRestrictedSSH
+--- PASS: TestProdPlanRestrictedSSH (0.00s)
+PASS
+ok  	github.com/opella/devops-challenge/tests/integration	1.100s

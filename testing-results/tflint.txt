@@ -1,0 +1,13 @@
+============================================
+ TFLint Results
+============================================
+
+==> Linting modules/vnet...
+Exit code: 0
+
+==> Linting environments/dev...
+Exit code: 0
+
+==> Linting environments/prod...
+Exit code: 0
+

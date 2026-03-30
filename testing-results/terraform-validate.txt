@@ -1,0 +1,12 @@
+============================================
+ Terraform Validate
+============================================
+
+==> Validating dev...
+[32m[1mSuccess![0m The configuration is valid.
+[0m
+
+==> Validating prod...
+[32m[1mSuccess![0m The configuration is valid.
+[0m
+

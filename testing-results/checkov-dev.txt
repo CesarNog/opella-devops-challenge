@@ -1,0 +1,125 @@
+============================================
+ Checkov Security Scan — dev
+============================================
+
+
+
+       _               _
+   ___| |__   ___  ___| | _______   __
+  / __| '_ \ / _ \/ __| |/ / _ \ \ / /
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By Prisma Cloud | version: 3.2.510 
+Update available 3.2.510 -> 3.2.513
+Run pip3 install -U checkov to update 
+
+
+terraform scan results:
+
+Passed checks: 24, Failed checks: 0, Skipped checks: 0
+
+Check: CKV_AZURE_118: "Ensure that Network Interfaces disable IP forwarding"
+	PASSED for resource: azurerm_network_interface.vm
+	File: /main.tf:125-138
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-that-network-interfaces-disable-ip-forwarding
+Check: CKV_AZURE_92: "Ensure that Virtual Machines use managed disks"
+	PASSED for resource: azurerm_linux_virtual_machine.this
+	File: /main.tf:140-168
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-virtual-machines-use-managed-disks
+Check: CKV_AZURE_178: "Ensure linux VM enables SSH with keys for secure communication"
+	PASSED for resource: azurerm_linux_virtual_machine.this
+	File: /main.tf:140-168
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/azr-general-178
+Check: CKV_AZURE_149: "Ensure that Virtual machine does not enable password authentication"
+	PASSED for resource: azurerm_linux_virtual_machine.this
+	File: /main.tf:140-168
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-azure-virtual-machine-does-not-enable-password-authentication
+Check: CKV_AZURE_179: "Ensure VM agent is installed"
+	PASSED for resource: azurerm_linux_virtual_machine.this
+	File: /main.tf:140-168
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/azr-general-179
+Check: CKV_AZURE_1: "Ensure Azure Instance does not use basic authentication(Use SSH Key Instead)"
+	PASSED for resource: azurerm_linux_virtual_machine.this
+	File: /main.tf:140-168
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-1
+Check: CKV_AZURE_33: "Ensure Storage logging is enabled for Queue service for read, write and delete requests"
+	PASSED for resource: azurerm_storage_account.this
+	File: /main.tf:174-215
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-logging-policies/enable-requests-on-storage-logging-for-queue-service
+Check: CKV_AZURE_43: "Ensure Storage Accounts adhere to the naming rules"
+	PASSED for resource: azurerm_storage_account.this
+	File: /main.tf:174-215
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-storage-policies/ensure-storage-accounts-adhere-to-the-naming-rules
+Check: CKV_AZURE_244: "Avoid the use of local users for Azure Storage unless necessary"
+	PASSED for resource: azurerm_storage_account.this
+	File: /main.tf:174-215
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azure-244
+Check: CKV_AZURE_44: "Ensure Storage Account is using the latest version of TLS encryption"
+	PASSED for resource: azurerm_storage_account.this
+	File: /main.tf:174-215
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-storage-policies/bc-azr-storage-2
+Check: CKV_AZURE_36: "Ensure 'Trusted Microsoft Services' is enabled for Storage Account access"
+	PASSED for resource: azurerm_storage_account.this
+	File: /main.tf:174-215
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/enable-trusted-microsoft-services-for-storage-account-access
+Check: CKV_AZURE_3: "Ensure that 'enable_https_traffic_only' is enabled"
+	PASSED for resource: azurerm_storage_account.this
+	File: /main.tf:174-215
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/azr-general-3
+Check: CKV_AZURE_190: "Ensure that Storage blobs restrict public access"
+	PASSED for resource: azurerm_storage_account.this
+	File: /main.tf:174-215
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-190
+Check: CKV_AZURE_34: "Ensure that 'Public access level' is set to Private for blob containers"
+	PASSED for resource: azurerm_storage_container.data
+	File: /main.tf:217-221
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/set-public-access-level-to-private-for-blob-containers
+Check: CKV_AZURE_189: "Ensure that Azure Key Vault disables public network access"
+	PASSED for resource: azurerm_key_vault.this
+	File: /main.tf:227-245
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-189
+Check: CKV_AZURE_111: "Ensure that key vault enables soft delete"
+	PASSED for resource: azurerm_key_vault.this
+	File: /main.tf:227-245
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-key-vault-enables-soft-delete
+Check: CKV_AZURE_41: "Ensure that the expiration date is set on all secrets"
+	PASSED for resource: azurerm_key_vault_secret.vm_ssh_key
+	File: /main.tf:257-269
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-secrets-policies/set-an-expiration-date-on-all-secrets
+Check: CKV_AZURE_114: "Ensure that key vault secrets have "content_type" set"
+	PASSED for resource: azurerm_key_vault_secret.vm_ssh_key
+	File: /main.tf:257-269
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-key-vault-secrets-have-content-type-set
+Check: CKV_AZURE_183: "Ensure that VNET uses local DNS addresses"
+	PASSED for resource: module.vnet.azurerm_virtual_network.this
+	File: /../../modules/vnet/main.tf:10-18
+	Calling File: /main.tf:48-105
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-183
+Check: CKV_AZURE_182: "Ensure that VNET has at least 2 connected DNS Endpoints"
+	PASSED for resource: module.vnet.azurerm_virtual_network.this
+	File: /../../modules/vnet/main.tf:10-18
+	Calling File: /main.tf:48-105
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-182
+Check: CKV_AZURE_77: "Ensure that UDP Services are restricted from the Internet "
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /../../modules/vnet/main.tf:57-80
+	Calling File: /main.tf:48-105
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-that-udp-services-are-restricted-from-the-internet
+Check: CKV_AZURE_10: "Ensure that SSH access is restricted from the internet"
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /../../modules/vnet/main.tf:57-80
+	Calling File: /main.tf:48-105
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-3
+Check: CKV_AZURE_9: "Ensure that RDP access is restricted from the internet"
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /../../modules/vnet/main.tf:57-80
+	Calling File: /main.tf:48-105
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-2
+Check: CKV_AZURE_160: "Ensure that HTTP (port 80) access is restricted from the internet"
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /../../modules/vnet/main.tf:57-80
+	Calling File: /main.tf:48-105
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-azure-http-port-80-access-from-the-internet-is-restricted
+
+

@@ -1,0 +1,10 @@
+============================================
+ OPA Policy Tests — dev
+============================================
+[1] Generating plan JSON...
+[2] Running conftest...
+
+0 tests, 0 passed, 0 warnings, 0 failures, 0 exceptions
+[3] Cleaning up...
+
+Policy tests complete.

@@ -1,0 +1,53 @@
+============================================
+ Checkov Security Scan — VNET module
+============================================
+
+
+
+       _               _
+   ___| |__   ___  ___| | _______   __
+  / __| '_ \ / _ \/ __| |/ / _ \ \ / /
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By Prisma Cloud | version: 3.2.510 
+Update available 3.2.510 -> 3.2.513
+Run pip3 install -U checkov to update 
+
+
+terraform scan results:
+
+Passed checks: 6, Failed checks: 0, Skipped checks: 0
+
+Check: CKV_AZURE_183: "Ensure that VNET uses local DNS addresses"
+	PASSED for resource: module.vnet.azurerm_virtual_network.this
+	File: /main.tf:10-18
+	Calling File: /tests/fixtures/with_nsg/main.tf:20-54
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-183
+Check: CKV_AZURE_182: "Ensure that VNET has at least 2 connected DNS Endpoints"
+	PASSED for resource: module.vnet.azurerm_virtual_network.this
+	File: /main.tf:10-18
+	Calling File: /tests/fixtures/with_nsg/main.tf:20-54
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-182
+Check: CKV_AZURE_77: "Ensure that UDP Services are restricted from the Internet "
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /main.tf:57-80
+	Calling File: /tests/fixtures/with_nsg/main.tf:20-54
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-that-udp-services-are-restricted-from-the-internet
+Check: CKV_AZURE_10: "Ensure that SSH access is restricted from the internet"
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /main.tf:57-80
+	Calling File: /tests/fixtures/with_nsg/main.tf:20-54
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-3
+Check: CKV_AZURE_9: "Ensure that RDP access is restricted from the internet"
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /main.tf:57-80
+	Calling File: /tests/fixtures/with_nsg/main.tf:20-54
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-2
+Check: CKV_AZURE_160: "Ensure that HTTP (port 80) access is restricted from the internet"
+	PASSED for resource: module.vnet.azurerm_network_security_group.this
+	File: /main.tf:57-80
+	Calling File: /tests/fixtures/with_nsg/main.tf:20-54
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/ensure-azure-http-port-80-access-from-the-internet-is-restricted
+
+

@@ -1,0 +1,8 @@
+============================================
+ Terraform Format Check
+============================================
+
+$ terraform fmt -check -recursive .
+
+All files are properly formatted. No changes needed.
+Exit code: 0
