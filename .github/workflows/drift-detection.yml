@@ -9,107 +9,107 @@
 # Schedule: Weekdays at 6:00 AM UTC
 # =============================================================================
 
-name: "Drift Detection"
+# name: "Drift Detection"
 
-on:
-  schedule:
-    - cron: "0 6 * * 1-5"
-  workflow_dispatch:
+# on:
+#   schedule:
+#     - cron: "0 6 * * 1-5"
+#   workflow_dispatch:
 
-permissions:
-  contents: read
-  issues: write
+# permissions:
+#   contents: read
+#   issues: write
 
-env:
-  TF_VERSION: "1.7.0"
-  TF_IN_AUTOMATION: "true"
-  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-  ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
+# env:
+#   TF_VERSION: "1.7.0"
+#   TF_IN_AUTOMATION: "true"
+#   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+#   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+#   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+#   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+#   ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
 
-jobs:
-  detect-drift:
-    name: "Drift Check - ${{ matrix.environment }}"
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: [dev, prod]
-    defaults:
-      run:
-        working-directory: environments/${{ matrix.environment }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# jobs:
+#   detect-drift:
+#     name: "Drift Check - ${{ matrix.environment }}"
+#     runs-on: ubuntu-latest
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         environment: [dev, prod]
+#     defaults:
+#       run:
+#         working-directory: environments/${{ matrix.environment }}
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: ${{ env.TF_VERSION }}
 
-      - name: Terraform Init
-        run: terraform init
+#       - name: Terraform Init
+#         run: terraform init
 
-      - name: Terraform Plan (detect drift)
-        id: plan
-        run: |
-          terraform plan -detailed-exitcode -no-color -out=drift.tfplan 2>&1 | tee plan_output.txt
-          echo "exitcode=$?" >> $GITHUB_OUTPUT
-        continue-on-error: true
+#       - name: Terraform Plan (detect drift)
+#         id: plan
+#         run: |
+#           terraform plan -detailed-exitcode -no-color -out=drift.tfplan 2>&1 | tee plan_output.txt
+#           echo "exitcode=$?" >> $GITHUB_OUTPUT
+#         continue-on-error: true
 
-      - name: Open issue on drift
-        if: steps.plan.outcome == 'failure'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const planOutput = fs.readFileSync(
-              'environments/${{ matrix.environment }}/plan_output.txt', 'utf8'
-            ).slice(-3000);
+#       - name: Open issue on drift
+#         if: steps.plan.outcome == 'failure'
+#         uses: actions/github-script@v7
+#         with:
+#           script: |
+#             const fs = require('fs');
+#             const planOutput = fs.readFileSync(
+#               'environments/${{ matrix.environment }}/plan_output.txt', 'utf8'
+#             ).slice(-3000);
 
-            const title = `🔀 Drift detected in ${{ matrix.environment }} environment`;
-            const body = `## Infrastructure Drift Detected
+#             const title = `🔀 Drift detected in ${{ matrix.environment }} environment`;
+#             const body = `## Infrastructure Drift Detected
 
-            **Environment:** \`${{ matrix.environment }}\`
-            **Detected at:** ${new Date().toISOString()}
-            **Workflow run:** [View logs](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})
+#             **Environment:** \`${{ matrix.environment }}\`
+#             **Detected at:** ${new Date().toISOString()}
+#             **Workflow run:** [View logs](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})
 
-            <details><summary>Plan output (last 3000 chars)</summary>
+#             <details><summary>Plan output (last 3000 chars)</summary>
 
-            \`\`\`
-            ${planOutput}
-            \`\`\`
+#             \`\`\`
+#             ${planOutput}
+#             \`\`\`
 
-            </details>
+#             </details>
 
-            ### Recommended Actions
-            1. Review the plan output to understand what changed
-            2. If intentional, run \`terraform apply\` to update state
-            3. If unintentional, investigate who/what made the change
-            `;
+#             ### Recommended Actions
+#             1. Review the plan output to understand what changed
+#             2. If intentional, run \`terraform apply\` to update state
+#             3. If unintentional, investigate who/what made the change
+#             `;
 
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: 'drift,${{ matrix.environment }}'
-            });
+#             const { data: issues } = await github.rest.issues.listForRepo({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               state: 'open',
+#               labels: 'drift,${{ matrix.environment }}'
+#             });
 
-            if (issues.length === 0) {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: title,
-                body: body,
-                labels: ['drift', '${{ matrix.environment }}', 'automated']
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issues[0].number,
-                body: `### Drift still detected (${new Date().toISOString()})\n\n${body}`
-              });
-            }
+#             if (issues.length === 0) {
+#               await github.rest.issues.create({
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 title: title,
+#                 body: body,
+#                 labels: ['drift', '${{ matrix.environment }}', 'automated']
+#               });
+#             } else {
+#               await github.rest.issues.createComment({
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 issue_number: issues[0].number,
+#                 body: `### Drift still detected (${new Date().toISOString()})\n\n${body}`
+#               });
+#             }
