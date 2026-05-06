@@ -1,4 +1,4 @@
-# Opella DevOps Challenge — Azure Infrastructure with Terraform
+# Opella Challenge — Azure Infrastructure with Terraform
 [![Terraform CI/CD](https://github.com/CesarNog/opella-devops-challenge/actions/workflows/terraform.yml/badge.svg)](https://github.com/CesarNog/opella-devops-challenge/actions/workflows/terraform.yml)
 
 Production-grade Terraform infrastructure for Azure, featuring a reusable VNET module, multi-environment deployments (dev / prod), and a GitHub Actions CI/CD pipeline.
