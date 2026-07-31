@@ -216,7 +216,7 @@ jobs:
 
       - name: Post plan output to PR comment
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const output = `### Terraform Plan — \`${{ matrix.environment }}\` ${{ steps.plan.outcome == 'success' && '✅' || '❌' }}
